@@ -4,20 +4,27 @@ package com.example.mtglifecounter.Components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,7 +33,9 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +45,11 @@ import com.example.mtglifecounter.Data.Player
 import com.example.mtglifecounter.R
 import com.example.mtglifecounter.ViewModel.GameViewModel
 import com.example.mtglifecounter.ui.theme.customTextStyle
+
+
+enum class CounterType {
+    LIFE, COMMANDER_DAMAGE, POISON, ENERGY
+}
 
 @Composable
 fun PlayerLifeCounter(
@@ -47,12 +61,87 @@ fun PlayerLifeCounter(
 ) {
     var name by rememberSaveable { mutableStateOf(player.name) }
     var life by rememberSaveable { mutableStateOf(player.life) }
+    var commanderDamage by rememberSaveable { mutableStateOf(player.commanderDamage) }
+    var poisonCounter by rememberSaveable { mutableStateOf(player.poisonCounter) }
+    var energyCounter by rememberSaveable { mutableStateOf(player.energyCounter) }
+
+    var counterType by rememberSaveable { mutableStateOf(CounterType.LIFE) }
+
+
+    fun getCounterValue(): Int {
+        return when (counterType) {
+            CounterType.LIFE -> life
+            CounterType.COMMANDER_DAMAGE -> commanderDamage
+            CounterType.POISON -> poisonCounter
+            CounterType.ENERGY -> energyCounter
+        }
+    }
+
+    fun getCounterIcon(): Int {
+        return when (counterType) {
+            CounterType.LIFE -> R.drawable.life__icon
+            CounterType.COMMANDER_DAMAGE -> R.drawable.comander_icon
+            CounterType.POISON -> R.drawable.toxic_icon
+            CounterType.ENERGY -> R.drawable.energy_icon
+        }
+    }
+
+    fun incrementCounter() {
+        when (counterType) {
+            CounterType.LIFE -> {
+                gameViewModel.incrementLife(player)
+                life = player.life
+            }
+
+            CounterType.COMMANDER_DAMAGE -> {
+                commanderDamage++
+                player.commanderDamage = commanderDamage
+            }
+
+            CounterType.POISON -> {
+                poisonCounter++
+                player.poisonCounter = poisonCounter
+            }
+
+            CounterType.ENERGY -> {
+                energyCounter++
+                player.energyCounter = energyCounter
+            }
+        }
+    }
+
+
+    fun decrementCounter() {
+        when (counterType) {
+            CounterType.LIFE -> {
+                gameViewModel.decrementLife(player)
+                life = player.life
+            }
+
+            CounterType.COMMANDER_DAMAGE -> {
+                commanderDamage--
+                player.commanderDamage = commanderDamage
+            }
+
+            CounterType.POISON -> {
+                poisonCounter--
+                player.poisonCounter = poisonCounter
+            }
+
+            CounterType.ENERGY -> {
+                energyCounter--
+                player.energyCounter = energyCounter
+            }
+        }
+    }
+
+    val orientation = LocalConfiguration.current.orientation
 
     Box(
         modifier = modifier
             .rotate(rotateAngle)
             .fillMaxSize()
-            .border(0.3.dp, Color.White)
+            .border(0.2.dp, Color.White)
     ) {
         Image(
             painter = painterResource(id = backgroundID),
@@ -60,6 +149,78 @@ fun PlayerLifeCounter(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+
+            Icon(
+                painter = painterResource(
+                    id = getCounterIcon()
+                ),
+                contentDescription = "",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(40.dp)
+            )
+            
+
+            Row (
+                modifier = Modifier
+                    .fillMaxSize()
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.End
+            ) {
+
+                val comanderOrLifeIcon =
+                    if (counterType == CounterType.LIFE) {
+                        R.drawable.comander_icon
+                    } else {
+                        R.drawable.life__icon
+                    }
+
+                Icon(
+                    painter = painterResource(
+                        id =
+                        comanderOrLifeIcon
+                    ),
+                    contentDescription = "",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(30.dp)
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                val commanderOrLifeText =
+                    if (counterType == CounterType.LIFE) {
+                        commanderDamage
+                    } else {
+                        life
+                    }
+
+                Text(
+                    commanderOrLifeText.toString(),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .background(Color.Transparent)
+                        .padding(bottom = 2.dp)
+
+                )
+
+            }
+
+
+        }
+
+        Column {
+
+        }
 
         Column(
             modifier = modifier.padding(16.dp),
@@ -82,7 +243,9 @@ fun PlayerLifeCounter(
                         blurRadius = 4f
                     )
                 ),
-                modifier = Modifier.background(Color.Transparent).padding(4.dp)
+                modifier = Modifier
+                    .background(Color.Transparent)
+                    .padding(4.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -93,12 +256,10 @@ fun PlayerLifeCounter(
             ) {
                 Buttons(
                     onShortClick = {
-                        gameViewModel.decrementLife(player)
-                        life = player.life
+                        decrementCounter()
                     },
                     onLongPressAction = {
-                        gameViewModel.decrementLife(player)
-                        life = player.life
+                        decrementCounter()
                     },
                     iconID = R.drawable.botonminus,
                     contentDescription = "Decrement life",
@@ -108,7 +269,7 @@ fun PlayerLifeCounter(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    life.toString(),
+                    getCounterValue().toString(),
                     fontSize = 48.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
@@ -116,7 +277,24 @@ fun PlayerLifeCounter(
                     modifier = Modifier
                         .background(Color.Transparent)
                         .padding(16.dp)
-                        .bounceClick(),
+                        .bounceClick()
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = {
+                                    counterType = when (counterType) {
+                                        CounterType.LIFE -> CounterType.COMMANDER_DAMAGE
+                                        CounterType.COMMANDER_DAMAGE -> CounterType.POISON
+                                        CounterType.POISON -> CounterType.ENERGY
+                                        CounterType.ENERGY -> CounterType.LIFE
+                                    }
+                                },
+
+                                onLongPress = {
+                                    player.life = 40
+                                    life = player.life
+                                }
+                            )
+                        },
                     style = customTextStyle.copy(
                         shadow = Shadow(
                             color = Color.Black,
@@ -130,13 +308,11 @@ fun PlayerLifeCounter(
 
                 Buttons(
                     onShortClick = {
-                        gameViewModel.incrementLife(player)
-                        life = player.life
+                        incrementCounter()
                     },
                     onLongPressAction = {
-                        gameViewModel.incrementLife(player)
-                        gameViewModel.incrementLife(player)
-                        life = player.life
+                        incrementCounter()
+
                     },
                     iconID = R.drawable.botonplus,
                     contentDescription = "Increment life",

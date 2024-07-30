@@ -46,6 +46,8 @@ fun Buttons(
         )
     }
 }
+
+
 @Composable
 fun DisplayHealth(){
 
