@@ -1,23 +1,28 @@
 package com.example.mtglifecounter
 
 
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import com.example.mtglifecounter.ui.theme.MTGLifeCounterTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,14 +36,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mtglifecounter.Components.Buttons
+import com.example.mtglifecounter.Components.bounceClick
 import com.example.mtglifecounter.Data.Player
 import com.example.mtglifecounter.ViewModel.GameViewModel
+import com.example.mtglifecounter.ui.theme.MTGLifeCounterTheme
 import com.example.mtglifecounter.ui.theme.customTextStyle
 
 
@@ -57,6 +63,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PlayerLifeCounter( //Función de contaje de vidas
+    gameViewModel: GameViewModel,
     player: Player,
     backgroundID: Int,
     rotateAngle: Float = 0f,
@@ -130,15 +137,21 @@ fun PlayerLifeCounter( //Función de contaje de vidas
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                IconButton(onClick = {  //Boton decrecer
-                    life--
-                    player.life = life //Actualizamos la vida del jugador
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.botonminus),
-                        contentDescription = "Decrease life",
-                        tint = Color.White)
-                }
+
+                Buttons(
+                    onShortClick = {
+                        gameViewModel.decrementLife(player)
+                        life = player.life
+                    },
+                    onLongPressAction = {
+                        gameViewModel.decrementLife(player)
+                        life = player.life
+                    },
+                    iconID = R.drawable.botonminus,
+                    contentDescription = "Decrement life",
+                    modifier = Modifier
+                )
+
                 Spacer(modifier = Modifier.width(8.dp))
 
                 /*Vida*/
@@ -151,7 +164,8 @@ fun PlayerLifeCounter( //Función de contaje de vidas
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .background(Color.Transparent)
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .bounceClick(),
                     style = customTextStyle.copy(
                         shadow = Shadow(
                             color = Color.Black,
@@ -164,19 +178,24 @@ fun PlayerLifeCounter( //Función de contaje de vidas
 
                 /*Boton incrementar*/
 
-                IconButton(onClick = {
-                    life++
-                    player.life = life
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.botonplus),
-                        contentDescription = "Increase life",
-                        tint = Color.White)
-                }
+                Buttons(
+                    onShortClick = {
+                        gameViewModel.incrementLife(player)
+                        life = player.life
+                    },
+                    onLongPressAction = {
+                        gameViewModel.incrementLife(player)
+                        life = player.life
+                    },
+                    iconID = R.drawable.botonplus,
+                    contentDescription = "Increment life",
+                    modifier = Modifier
+                )
             }
         }
     }
 }
+
 
 /*Función para partir la pantalla*/
 
@@ -200,6 +219,7 @@ fun ScreenSplitInFour(gameViewModel: GameViewModel) {
             /*PLAYER 1*/
             PlayerLifeCounter(
                 player = gameViewModel.players[0],
+                gameViewModel = gameViewModel,
                 backgroundID = R.drawable.background6,
                 rotateAngle = 180f,
                 modifier = Modifier
@@ -212,6 +232,7 @@ fun ScreenSplitInFour(gameViewModel: GameViewModel) {
             /*PLAYER 2*/
             PlayerLifeCounter( //añadimos el contador para el jugador 1
                 player = gameViewModel.players[1],
+                gameViewModel = gameViewModel,
                 backgroundID = R.drawable.background8,
                 modifier = Modifier
                     .weight(1f)
@@ -232,6 +253,7 @@ fun ScreenSplitInFour(gameViewModel: GameViewModel) {
             /*PLAYER 3*/
             PlayerLifeCounter( //añadimos el contador para el jugador 1
                 player = gameViewModel.players[2],
+                gameViewModel = gameViewModel,
                 backgroundID = R.drawable.background7,
                 rotateAngle = 180f,
                 modifier = Modifier
@@ -244,11 +266,11 @@ fun ScreenSplitInFour(gameViewModel: GameViewModel) {
             /*PLAYER 4*/
             PlayerLifeCounter( //añadimos el contador para el jugador 1
                 player = gameViewModel.players[3],
+                gameViewModel = gameViewModel,
                 backgroundID = R.drawable.background4,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-
 
 
             )
@@ -258,6 +280,7 @@ fun ScreenSplitInFour(gameViewModel: GameViewModel) {
     }
 
 }
+
 
 
 
